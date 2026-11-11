@@ -1,0 +1,44 @@
+services:
+  inventaris-lab:
+    build: .
+    image: inventaris-lab:1.0
+    container_name: inventaris-lab
+    ports:
+      - "8080:3000"
+    environment:
+      DB_HOST: inventaris-db
+      DB_PORT: 5432
+      DB_NAME: inventaris
+      DB_USER: inventaris
+      DB_PASSWORD: ${DB_PASSWORD:-latihan-ganti-123}
+    depends_on:
+      inventaris-db:
+        condition: service_healthy
+    networks:
+      - inventaris-net
+    restart: unless-stopped
+
+  inventaris-db:
+    image: postgres:16-alpine
+    container_name: inventaris-db
+    environment:
+      POSTGRES_USER: inventaris
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-latihan-ganti-123}
+      POSTGRES_DB: inventaris
+    volumes:
+      - inventaris-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U inventaris -d inventaris"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    networks:
+      - inventaris-net
+    restart: unless-stopped
+
+volumes:
+  inventaris-db-data:
+
+networks:
+  inventaris-net:
+    driver: bridge
